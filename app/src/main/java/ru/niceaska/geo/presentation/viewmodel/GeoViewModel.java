@@ -15,14 +15,14 @@ import ru.niceaska.geo.domain.OnLoadDtatListener;
 import ru.niceaska.geo.domain.interactors.GetLocationInteractor;
 import ru.niceaska.geo.domain.interactors.GetWeatherInteractor;
 import ru.niceaska.geo.domain.model.Weather;
+import ru.niceaska.geo.utils.TemperatureUtils;
 
 public class GeoViewModel extends AndroidViewModel {
 
     public MutableLiveData<String> weatherMain = new MutableLiveData<>();
     public MutableLiveData<String> weatherDescription = new MutableLiveData<>();
     public MutableLiveData<String> weatherTemp = new MutableLiveData<>();
-    public MutableLiveData<String> weatherTempMin = new MutableLiveData<>();
-    public MutableLiveData<String> weatherTempMax = new MutableLiveData<>();
+    public MutableLiveData<String> weatherTempMaxMin = new MutableLiveData<>();
     public MutableLiveData<String> weatherHumidity = new MutableLiveData<>();
     public MutableLiveData<String> weatherPressure = new MutableLiveData<>();
     public MutableLiveData<String> weatherSeaLevel = new MutableLiveData<>();
@@ -36,6 +36,7 @@ public class GeoViewModel extends AndroidViewModel {
     private WeatherRepository weatherRepository = new WeatherRepository(getApplication());
     private GetLocationInteractor locationInteractor = new GetLocationInteractor(weatherRepository);
     private GetWeatherInteractor weatherInteractor = new GetWeatherInteractor(weatherRepository);
+    private Disposable updateLocation;
 
     public GeoViewModel(@NonNull Application application) {
         super(application);
@@ -51,8 +52,9 @@ public class GeoViewModel extends AndroidViewModel {
                     weatherMain.setValue(weather.getmMain());
                     weatherDescription.setValue(weather.getmDescription());
                     weatherTemp.setValue(String.valueOf(weather.getmTemp()));
-                    weatherTempMin.setValue(String.valueOf(weather.getmTempMin()));
-                    weatherTempMax.setValue(String.valueOf(weather.getmTempMax()));
+                    weatherTempMaxMin.setValue(TemperatureUtils.formatMinMaxTemp(
+                            weather.getmTempMin(), weather.getmTempMax())
+                    );
                     weatherHumidity.setValue(String.valueOf(weather.getmHumidity()));
                     weatherSeaLevel.setValue(String.valueOf(weather.getmSeaLevel()));
                     weatherPressure.setValue(String.valueOf(weather.getmPressure()));
@@ -74,7 +76,7 @@ public class GeoViewModel extends AndroidViewModel {
 
 
     private void updateLocation(double lat, double lon) {
-        Disposable disposable = weatherInteractor.getAdress(lat, lon)
+        updateLocation = weatherInteractor.getAdress(lat, lon)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<String>() {
@@ -87,8 +89,9 @@ public class GeoViewModel extends AndroidViewModel {
                     public void accept(Throwable throwable) throws Exception {
                     }
                 });
-
     }
 
-
+    public void dispose() {
+        updateLocation.dispose();
+    }
 }

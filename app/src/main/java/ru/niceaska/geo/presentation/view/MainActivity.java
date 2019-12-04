@@ -1,27 +1,20 @@
 package ru.niceaska.geo.presentation.view;
 
+import android.Manifest;
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
-
-import android.Manifest;
-import android.annotation.SuppressLint;
-import android.app.Dialog;
-import android.content.DialogInterface;
-import android.content.pm.PackageManager;
-import android.location.Location;
-import android.os.Bundle;
-import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnSuccessListener;
 
 import ru.niceaska.geo.R;
 import ru.niceaska.geo.databinding.ActivityMainBinding;
@@ -111,6 +104,11 @@ public class MainActivity extends AppCompatActivity implements IMainActivity {
                 REQUEST_CODE);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        geoViewModel.dispose();
+    }
 
     @Override
     public void notifyChanges() {
