@@ -19,6 +19,7 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import ru.niceaska.geo.R;
 import ru.niceaska.geo.databinding.ActivityMainBinding;
 import ru.niceaska.geo.presentation.viewmodel.GeoViewModel;
+import ru.niceaska.geo.presentation.viewmodel.ViewModelFactory;
 
 public class MainActivity extends AppCompatActivity implements IMainActivity {
 
@@ -32,7 +33,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        geoViewModel = ViewModelProviders.of(this).get(GeoViewModel.class);
+        geoViewModel = ViewModelProviders
+                .of(this, new ViewModelFactory(getApplicationContext()))
+                .get(GeoViewModel.class);
         binding = DataBindingUtil.setContentView(MainActivity.this, R.layout.activity_main);
         binding.setLifecycleOwner(this);
         binding.setVM(geoViewModel);

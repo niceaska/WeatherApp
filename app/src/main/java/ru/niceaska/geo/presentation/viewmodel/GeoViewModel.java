@@ -1,45 +1,43 @@
 package ru.niceaska.geo.presentation.viewmodel;
 
-import android.app.Application;
+import android.util.Log;
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.ViewModel;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
-import ru.niceaska.geo.data.repository.WeatherRepository;
 import ru.niceaska.geo.domain.OnLoadDtatListener;
 import ru.niceaska.geo.domain.interactors.GetLocationInteractor;
 import ru.niceaska.geo.domain.interactors.GetWeatherInteractor;
 import ru.niceaska.geo.domain.model.Weather;
-import ru.niceaska.geo.utils.TemperatureUtils;
+import ru.niceaska.geo.utils.WeatherUtils;
 
-public class GeoViewModel extends AndroidViewModel {
+public class GeoViewModel extends ViewModel {
 
     public MutableLiveData<String> weatherMain = new MutableLiveData<>();
     public MutableLiveData<String> weatherDescription = new MutableLiveData<>();
     public MutableLiveData<String> weatherTemp = new MutableLiveData<>();
     public MutableLiveData<String> weatherTempMaxMin = new MutableLiveData<>();
-    public MutableLiveData<String> weatherHumidity = new MutableLiveData<>();
-    public MutableLiveData<String> weatherPressure = new MutableLiveData<>();
-    public MutableLiveData<String> weatherSeaLevel = new MutableLiveData<>();
-    public MutableLiveData<String> weatherWinSpeed = new MutableLiveData<>();
-    public MutableLiveData<String> weatherWinDeg = new MutableLiveData<>();
-    public MutableLiveData<String> lovationName = new MutableLiveData<>();
+    public MutableLiveData<String> weatherPressureHumidity = new MutableLiveData<>();
+    public MutableLiveData<String> weatherWinSpeedDeg = new MutableLiveData<>();
+    public MutableLiveData<String> locationName = new MutableLiveData<>();
 
 
     private double mLat;
     private double mLon;
-    private WeatherRepository weatherRepository = new WeatherRepository(getApplication());
-    private GetLocationInteractor locationInteractor = new GetLocationInteractor(weatherRepository);
-    private GetWeatherInteractor weatherInteractor = new GetWeatherInteractor(weatherRepository);
     private Disposable updateLocation;
+    private static final String TAG = "GeoViewModel";
 
-    public GeoViewModel(@NonNull Application application) {
-        super(application);
+    private GetLocationInteractor mLocationInteractor;
+    private GetWeatherInteractor mGetWeatherInteractor;
+
+    public GeoViewModel(GetLocationInteractor locationInteractor,
+                        GetWeatherInteractor getWeatherInteractor) {
+        mLocationInteractor = locationInteractor;
+        mGetWeatherInteractor = getWeatherInteractor;
     }
 
     public void startLocationService() {
@@ -52,14 +50,15 @@ public class GeoViewModel extends AndroidViewModel {
                     weatherMain.setValue(weather.getmMain());
                     weatherDescription.setValue(weather.getmDescription());
                     weatherTemp.setValue(String.valueOf(weather.getmTemp()));
-                    weatherTempMaxMin.setValue(TemperatureUtils.formatMinMaxTemp(
+                    weatherTempMaxMin.setValue(WeatherUtils.formatMinMaxTemp(
                             weather.getmTempMin(), weather.getmTempMax())
                     );
-                    weatherHumidity.setValue(String.valueOf(weather.getmHumidity()));
-                    weatherSeaLevel.setValue(String.valueOf(weather.getmSeaLevel()));
-                    weatherPressure.setValue(String.valueOf(weather.getmPressure()));
-                    weatherWinSpeed.setValue(String.valueOf(weather.getmWindSpeed()));
-                    weatherWinDeg.setValue(String.valueOf(weather.getmWindDeg()));
+                    weatherPressureHumidity.setValue(
+                            WeatherUtils.formatPressureHumadity(weather.getmHumidity(), weather.getmPressure())
+                    );
+                    weatherWinSpeedDeg.setValue(
+                            WeatherUtils.formatWind(weather.getmWindDeg(), weather.getmWindSpeed())
+                    );
 
                     if (mLat != weather.getLat() || mLon != weather.getLon()) {
                         mLat = weather.getLat();
@@ -70,23 +69,24 @@ public class GeoViewModel extends AndroidViewModel {
             }
         };
 
-        locationInteractor.startLocationService(listener);
+        mLocationInteractor.startLocationService(listener);
     }
 
 
 
     private void updateLocation(double lat, double lon) {
-        updateLocation = weatherInteractor.getAdress(lat, lon)
+        updateLocation = mGetWeatherInteractor.getAdress(lat, lon)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<String>() {
                     @Override
                     public void accept(String s) throws Exception {
-                        lovationName.setValue(s);
+                        locationName.setValue(s);
                     }
                 }, new Consumer<Throwable>() {
                     @Override
                     public void accept(Throwable throwable) throws Exception {
+                        Log.d(TAG, "accept: " + " error " + throwable.getMessage());
                     }
                 });
     }

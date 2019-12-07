@@ -6,9 +6,6 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.util.Log;
 
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -16,7 +13,6 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.Callable;
 
 import io.reactivex.Single;
@@ -28,10 +24,8 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import ru.niceaska.geo.data.WeatherApi;
 import ru.niceaska.geo.data.WeatherConverter;
-import ru.niceaska.geo.data.model.MainWeatherModel;
 import ru.niceaska.geo.data.model.WeatherResponse;
 import ru.niceaska.geo.domain.OnLoadDtatListener;
-import ru.niceaska.geo.domain.model.Weather;
 
 public class WeatherRepository {
 
@@ -102,7 +96,7 @@ public class WeatherRepository {
             @Override
             public String apply(List<Address> addressList) throws Exception {
                 return addressList == null || addressList.isEmpty() ?
-                        ADDRESS_NOT_FOUND : addressList.get(0).getFeatureName();
+                        ADDRESS_NOT_FOUND : addressList.get(0).getLocality();
             }
         });
     }

@@ -12,7 +12,7 @@ public class GetWeatherInteractor {
         this.weatherRepository = weatherRepository;
     }
 
-    public Single<String> getAdress(double lon, double lat) {
+    public Single<String> getAdress(double lat, double lon) {
         return weatherRepository.getFromLocation(lat, lon);
     }
 }
